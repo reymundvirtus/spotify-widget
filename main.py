@@ -113,7 +113,7 @@ def create_ui():
     window = DraggableWidget()
     window.setWindowTitle("Spotify Lyrics Widget")
     window.setGeometry(100, 100, 500, 500)
-    window.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+    window.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowDoesNotAcceptFocus | Qt.X11BypassWindowManagerHint)
     window.setAttribute(Qt.WA_TranslucentBackground)
 
     main_layout = QVBoxLayout()
@@ -155,10 +155,14 @@ def setup_auto_refresh(window, album_label, title_label, artist_label):
     window.timer = QTimer()
 
     def update():
-        print("[DEBUG] Timer tick")
+        # print("[DEBUG] Timer tick")
         current = sp.current_playback()
-        if not current or not current['is_playing']:
-            print("[DEBUG] Nothing playing")
+        
+        if not current or not current.get("is_playing") or not current.get("item"):
+            # print("[DEBUG] Nothing is currently playing.")
+            album_label.clear()
+            title_label.setText("No track playing")
+            artist_label.setText("")
             return
 
         track = current['item']
@@ -181,6 +185,7 @@ def setup_auto_refresh(window, album_label, title_label, artist_label):
 # === Main ===
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
     window, album_label, title_label, artist_label = create_ui()
     setup_auto_refresh(window, album_label, title_label, artist_label)
     window.show()
