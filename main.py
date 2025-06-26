@@ -2,7 +2,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import lyricsgenius
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtGui import QFont, QPixmap, QPainter, QColor
+from PyQt5.QtGui import QFont, QPixmap, QPainter, QColor, QPainterPath
 from PyQt5.QtCore import Qt, QTimer
 import sys
 import requests
@@ -37,7 +37,7 @@ class ScrollingLabel(QLabel):
         super().setText(text)
 
     def _scroll_text(self):
-        if len(self._full_text) <= 30:
+        if len(self._full_text) <= 25:
             super().setText(self._full_text)
             return
         scroll_text = self._full_text[self._pos:] + '       ' + self._full_text[:self._pos]
@@ -100,12 +100,25 @@ class DraggableWidget(QWidget):
 
     def mouseReleaseEvent(self, event):
         self.old_pos = None
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Frosted glass background (semi-transparent white)
+        bg_color = QColor(255, 255, 255, 25)  # low opacity white
+        border_color = QColor(255, 255, 255, 80)
+
+        rect = self.rect().adjusted(1, 1, -1, -1)
+        painter.setBrush(bg_color)
+        painter.setPen(border_color)
+        painter.drawRoundedRect(rect, 20, 20)  # radius 20 for curves
 
 # === Create UI ===
 def create_ui():
     window = DraggableWidget()
     window.setWindowTitle("Spotify Lyrics Widget")
-    window.setGeometry(100, 100, 500, 500)
+    window.setGeometry(100, 100, 500, 100)  # Set the initial window size
     window.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowDoesNotAcceptFocus | Qt.X11BypassWindowManagerHint)
     window.setAttribute(Qt.WA_TranslucentBackground)
 
@@ -166,7 +179,21 @@ def setup_auto_refresh(window, album_label, title_label, artist_label, visualize
 
             pixmap = QPixmap()
             pixmap.loadFromData(img_data)
-            album_label.setPixmap(pixmap.scaled(104, 104, Qt.KeepAspectRatio))
+            pixmap = pixmap.scaled(104, 104, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+
+            # Create a rounded pixmap
+            rounded = QPixmap(pixmap.size())
+            rounded.fill(Qt.transparent)
+
+            painter = QPainter(rounded)
+            painter.setRenderHint(QPainter.Antialiasing)
+            path = QPainterPath()
+            path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), 16, 16)  # 16px radius
+            painter.setClipPath(path)
+            painter.drawPixmap(0, 0, pixmap)
+            painter.end()
+
+            album_label.setPixmap(rounded)
 
             title_label.setText(title)
             artist_label.setText(artist)
