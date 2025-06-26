@@ -2,7 +2,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import lyricsgenius
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt5.QtGui import QFont, QPixmap, QPainter, QColor, QPainterPath
+from PyQt5.QtGui import QFont, QPixmap, QPainter, QColor, QPainterPath, QFontMetrics
 from PyQt5.QtCore import Qt, QTimer
 import sys
 import requests
@@ -34,7 +34,21 @@ class ScrollingLabel(QLabel):
     def setText(self, text):
         self._full_text = text
         self._pos = 0
-        super().setText(text)
+        if len(text) > 35:
+            # Stop scrolling and show elided text
+            self.timer.stop()
+            metrics = QFontMetrics(self.font())
+            elided = metrics.elidedText(text, Qt.ElideRight, self.width())
+            super().setText(elided)
+        else:
+            # Start scrolling
+            self.timer.start(150)
+            super().setText(text)
+
+    def resizeEvent(self, event):
+        # Reapply text formatting when the widget resizes
+        self.setText(self._full_text)
+        super().resizeEvent(event)
 
     def _scroll_text(self):
         if len(self._full_text) <= 25:
