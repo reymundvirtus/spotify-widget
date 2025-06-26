@@ -53,7 +53,7 @@ class ScrollingLabel(QLabel):
 class VisualizerBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.bars = [random.randint(10, 100) for _ in range(20)]
+        self.bars = [random.randint(10, 100) for _ in range(90)]
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.animate)
@@ -146,7 +146,6 @@ def create_ui():
     # Layouts
     main_layout = QVBoxLayout()
     top_layout = QHBoxLayout()
-    visualizer = VisualizerBar()
     info_layout = QVBoxLayout()
 
     # Widgets
@@ -155,6 +154,7 @@ def create_ui():
 
     title_label = ScrollingLabel()
     artist_label = ScrollingLabel()
+    visualizer = VisualizerBar()
 
     # Styling of title
     for lbl in [title_label]:
@@ -180,10 +180,11 @@ def create_ui():
     top_layout.addWidget(album_label)
     info_layout.addWidget(title_label)
     info_layout.addWidget(artist_label)
+    info_layout.addWidget(visualizer)
     top_layout.addLayout(info_layout)
 
     main_layout.addLayout(top_layout)
-    main_layout.addWidget(visualizer)
+    # main_layout.addWidget(visualizer)
     # main_layout.addWidget(lyrics_label)
 
     window.setLayout(main_layout)
