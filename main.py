@@ -6,16 +6,18 @@ from PyQt5.QtGui import QFont, QPixmap, QPainter, QColor, QPainterPath, QFontMet
 from PyQt5.QtCore import Qt, QTimer
 import sys
 import requests
-import random
+import random, os
+from dotenv import load_dotenv
+load_dotenv()
 
 # === Spotify & Genius Auth ===
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-    client_id='d2f069d8b5254a0ca7f3a6127e801b6b',
-    client_secret='7d1744a60c664983b86df397910cf59b',
-    redirect_uri='http://localhost:8888/callback',
+    client_id=os.getenv('SPOTIFY_CLIENT_ID'),
+    client_secret=os.getenv('SPOTIFY_CLIENT_SECRET'),
+    redirect_uri=os.getenv('SPOTIFY_REDIRECT_URI'),
     scope='user-read-playback-state'
 ))
-genius = lyricsgenius.Genius('2AGGl5eymo2ig3TU7AqOWgt6rJmLIPBSPeq9--z24HmQN62u15JAHldh25TMIVxl')
+genius = lyricsgenius.Genius(os.getenv('GENIUS_ACCESS_TOKEN'))
 
 # === Scrolling Label ===
 class ScrollingLabel(QLabel):
