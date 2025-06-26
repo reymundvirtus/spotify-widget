@@ -49,19 +49,24 @@ class VisualizerBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.bars = [random.randint(10, 100) for _ in range(90)]
-        self.bar_color = QColor(255, 255, 255)
+        self.bar_color = QColor(30, 215, 96)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.animate)
         self.timer.start(100)
         self.setFixedHeight(40)
 
-    def set_color(self, color_name):
-        self.bar_color = QColor(255, 255, 255) if color_name == 'white' else QColor(0, 0, 0)
-        self.update()
-
     def animate(self):
         self.bars = [random.randint(10, self.height()) for _ in self.bars]
         self.update()
+
+    def pause(self):
+        self.timer.stop()
+        self.bars = [1 for _ in self.bars]
+        self.update()
+
+    def resume(self):
+        if not self.timer.isActive():
+            self.timer.start(100)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -79,7 +84,6 @@ class DraggableWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.old_pos = None
-        self.dark_theme = True
         self.title_label = None
         self.artist_label = None
         self.visualizer = None
@@ -96,17 +100,6 @@ class DraggableWidget(QWidget):
 
     def mouseReleaseEvent(self, event):
         self.old_pos = None
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_T:
-            self.dark_theme = not self.dark_theme
-            self.toggle_theme()
-
-    def toggle_theme(self):
-        color = 'white' if self.dark_theme else 'black'
-        self.title_label.setStyleSheet(f"color: {color}; font-weight: bold")
-        self.artist_label.setStyleSheet(f"color: {color}; font-weight: bold")
-        self.visualizer.set_color(color)
 
 # === Create UI ===
 def create_ui():
@@ -148,35 +141,41 @@ def create_ui():
     window.artist_label = artist_label
     window.visualizer = visualizer
 
-    return window, album_label, title_label, artist_label
+    return window, album_label, title_label, artist_label, window.visualizer
 
 # === Auto Refresh Logic ===
-def setup_auto_refresh(window, album_label, title_label, artist_label):
+def setup_auto_refresh(window, album_label, title_label, artist_label, visualizer):
     window.timer = QTimer()
 
     def update():
-        # print("[DEBUG] Timer tick")
-        current = sp.current_playback()
-        
-        if not current or not current.get("is_playing") or not current.get("item"):
-            # print("[DEBUG] Nothing is currently playing.")
+        try:
+            current = sp.current_playback()
+
+            if not current or not current.get("is_playing") or not current.get("item"):
+                album_label.clear()
+                title_label.setText("No track playing")
+                artist_label.setText("Play or check your connection")
+                visualizer.pause()
+                return
+
+            track = current['item']
+            title = track['name']
+            artist = track['artists'][0]['name']
+            image_url = track['album']['images'][0]['url']
+            img_data = requests.get(image_url).content
+
+            pixmap = QPixmap()
+            pixmap.loadFromData(img_data)
+            album_label.setPixmap(pixmap.scaled(104, 104, Qt.KeepAspectRatio))
+
+            title_label.setText(title)
+            artist_label.setText(artist)
+            visualizer.resume()
+        except Exception:
             album_label.clear()
-            title_label.setText("No track playing")
-            artist_label.setText("")
-            return
-
-        track = current['item']
-        title = track['name']
-        artist = track['artists'][0]['name']
-        image_url = track['album']['images'][0]['url']
-        img_data = requests.get(image_url).content
-
-        pixmap = QPixmap()
-        pixmap.loadFromData(img_data)
-        album_label.setPixmap(pixmap.scaled(104, 104, Qt.KeepAspectRatio))
-
-        title_label.setText(title)
-        artist_label.setText(artist)
+            title_label.setText("No connection")
+            artist_label.setText("Please check your connection")
+            visualizer.pause()
 
     window.timer.timeout.connect(update)
     window.timer.start(10000)
@@ -186,7 +185,7 @@ def setup_auto_refresh(window, album_label, title_label, artist_label):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
-    window, album_label, title_label, artist_label = create_ui()
-    setup_auto_refresh(window, album_label, title_label, artist_label)
+    window, album_label, title_label, artist_label, visualizer = create_ui()
+    setup_auto_refresh(window, album_label, title_label, artist_label, visualizer)
     window.show()
     sys.exit(app.exec_())
