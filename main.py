@@ -8,6 +8,7 @@ import sys
 import requests
 import random, os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # === Spotify & Genius Auth ===
