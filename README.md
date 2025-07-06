@@ -16,7 +16,6 @@ Displays current track info, album art, and animated visualizer — with Genius 
 - 🌈 Visualizer animation  
 - 🪟 Frameless, transparent widget with glass-like style  
 - 🖱️ Draggable and resizable  
-- 🔐 Credentials stored securely in `.env` file  
 
 ---
 
@@ -33,9 +32,9 @@ Displays current track info, album art, and animated visualizer — with Genius 
 Create a file named `.env` in the project root and add your credentials:
 
 ```env
-SPOTIPY_CLIENT_ID=your_spotify_client_id
-SPOTIPY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIPY_REDIRECT_URI=http://localhost:8888/callback
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:8888/callback
 GENIUS_ACCESS_TOKEN=your_genius_token   # Optional, for lyrics
 ```
 
